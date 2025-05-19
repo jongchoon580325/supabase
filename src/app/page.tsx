@@ -305,14 +305,14 @@ export default function Home() {
             <input id="profile-image" type="file" accept="image/*" ref={fileInputRef} onChange={handleImageChange} className="block" tabIndex={0} aria-label="프로필/로고 이미지 업로드" />
             {imagePreview && <img src={imagePreview} alt="미리보기" className="w-16 h-16 object-cover rounded-full border ml-2" />}
           </div>
-          <div className="md:col-span-2 flex gap-2 mt-6 justify-center sm:justify-end w-full flex-nowrap overflow-x-auto">
-            <button type="button" onClick={handleExport} className="min-w-[120px] px-4 py-2 rounded bg-green-600 text-white font-semibold hover:bg-green-700" aria-label="내보내기">데이터 내보내기</button>
-            <label className="min-w-[120px] px-4 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 cursor-pointer" aria-label="가져오기">
-              데이터 가져오기
-              <input type="file" accept=".csv" onChange={handleImport} className="hidden" />
+          <div className="md:col-span-2 flex flex-col md:flex-row gap-2 mt-6 justify-center sm:justify-end w-full">
+            <button type="button" onClick={handleExport} className="w-full md:w-auto px-4 py-2 rounded bg-green-600 text-white font-semibold hover:bg-green-700 text-sm break-words" aria-label="내보내기">데이터 내보내기</button>
+            <label className="w-full md:w-auto px-4 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 cursor-pointer text-sm break-words text-center" aria-label="가져오기">
+                데이터 가져오기
+                <input type="file" accept=".csv" onChange={handleImport} className="hidden" />
             </label>
-            <button type="button" onClick={handleReset} className="min-w-[80px] px-4 py-2 rounded bg-red-600 text-white font-semibold hover:bg-red-700" aria-label="초기화">초기화</button>
-            <button type="submit" className="min-w-[80px] px-6 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500" disabled={loading} tabIndex={0} aria-label="저장">{loading ? '저장 중...' : '저장'}</button>
+            <button type="button" onClick={handleReset} className="w-full md:w-auto px-4 py-2 rounded bg-red-600 text-white font-semibold hover:bg-red-700 text-sm break-words" aria-label="초기화">초기화</button>
+            <button type="submit" className="w-full md:w-auto px-6 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 text-sm break-words" disabled={loading} tabIndex={0} aria-label="저장">{loading ? '저장 중...' : '저장'}</button>
           </div>
         </form>
         {/* 에러 메시지 */}

@@ -1,0 +1,22 @@
+{
+  "name": "Smart Name Card",
+  "short_name": "NameCard",
+  "description": "스마트 명함 관리 PWA",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#181e29",
+  "theme_color": "#e11d48",
+  "icons": [
+    {
+      "src": "/icon_192X192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon_512X512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+} 
