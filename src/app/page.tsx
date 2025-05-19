@@ -35,7 +35,7 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState(1); // 페이지네이션 상태
   const CARDS_PER_PAGE = 16; // 4x4
   // 모달 상태
-  const [modal, setModal] = useState<{ open: boolean, type: 'reset' | 'import' | 'export' | null, message?: string }>({ open: false, type: null });
+  const [modal, setModal] = useState<{ open: boolean, type: 'reset' | 'import' | 'export' | 'delete' | null, message?: string, cardId?: number }>({ open: false, type: null });
 
   // 명함 목록 불러오기
   const fetchCards = async () => {
@@ -113,9 +113,19 @@ export default function Home() {
     fetchCards();
   };
 
-  const handleDelete = async (id: number) => {
-    await supabase.from('supabase').delete().eq('id', id);
+  // 카드 삭제 버튼 클릭 시 모달 오픈
+  const handleDelete = (id: number) => {
+    setModal({ open: true, type: 'delete', cardId: id });
+  };
+
+  // 모달에서 진짜 삭제 확인
+  const confirmDelete = async () => {
+    if (modal.cardId == null) return;
+    setLoading(true);
+    await supabase.from('supabase').delete().eq('id', modal.cardId);
+    setLoading(false);
     fetchCards();
+    setModal({ open: true, type: 'delete', message: '카드가 삭제되었어요! 🗑️' });
   };
 
   const handleEdit = (card: any) => {
@@ -291,18 +301,18 @@ export default function Home() {
             <input id="address" name="address" value={form.address} onChange={handleChange} autoComplete="off" tabIndex={0} aria-label="주소" className="w-full px-3 py-2 rounded border border-gray-600 bg-gray-900 text-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500" />
           </div>
           <div className="md:col-span-2 flex items-center gap-4">
-            <label className="block font-medium" htmlFor="profile-image">프로필/로고 이미지</label>
+            <label className="block font-medium whitespace-nowrap" htmlFor="profile-image">프로필/로고 이미지</label>
             <input id="profile-image" type="file" accept="image/*" ref={fileInputRef} onChange={handleImageChange} className="block" tabIndex={0} aria-label="프로필/로고 이미지 업로드" />
             {imagePreview && <img src={imagePreview} alt="미리보기" className="w-16 h-16 object-cover rounded-full border ml-2" />}
           </div>
-          <div className="md:col-span-2 flex gap-2 mt-6 justify-end">
-            <button type="button" onClick={handleExport} className="px-4 py-2 rounded bg-green-600 text-white font-semibold hover:bg-green-700" aria-label="내보내기">데이터 내보내기</button>
-            <label className="px-4 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 cursor-pointer" aria-label="가져오기">
+          <div className="md:col-span-2 flex gap-2 mt-6 justify-center sm:justify-end w-full flex-nowrap overflow-x-auto">
+            <button type="button" onClick={handleExport} className="min-w-[120px] px-4 py-2 rounded bg-green-600 text-white font-semibold hover:bg-green-700" aria-label="내보내기">데이터 내보내기</button>
+            <label className="min-w-[120px] px-4 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 cursor-pointer" aria-label="가져오기">
               데이터 가져오기
               <input type="file" accept=".csv" onChange={handleImport} className="hidden" />
             </label>
-            <button type="button" onClick={handleReset} className="px-4 py-2 rounded bg-red-600 text-white font-semibold hover:bg-red-700" aria-label="초기화">초기화</button>
-            <button type="submit" className="px-6 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500" disabled={loading} tabIndex={0} aria-label="저장">{loading ? '저장 중...' : '저장'}</button>
+            <button type="button" onClick={handleReset} className="min-w-[80px] px-4 py-2 rounded bg-red-600 text-white font-semibold hover:bg-red-700" aria-label="초기화">초기화</button>
+            <button type="submit" className="min-w-[80px] px-6 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500" disabled={loading} tabIndex={0} aria-label="저장">{loading ? '저장 중...' : '저장'}</button>
           </div>
         </form>
         {/* 에러 메시지 */}
@@ -311,15 +321,22 @@ export default function Home() {
         {modal.open && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
             <div className="bg-white rounded-2xl shadow-xl p-8 max-w-xs w-full flex flex-col items-center relative animate-fadein">
-              <div className="text-4xl mb-2">{modal.type === 'reset' ? '⚠️' : '🎀'}</div>
+              <div className="text-4xl mb-2">{modal.type === 'reset' || modal.type === 'delete' ? '⚠️' : '🎀'}</div>
               <div className="text-lg font-bold text-gray-800 mb-2">
                 {modal.type === 'reset' && !modal.message && '정말 모든 데이터를 삭제할까요?'}
+                {modal.type === 'delete' && !modal.message && '정말 이 카드를 삭제할까요?'}
                 {modal.message}
               </div>
               {modal.type === 'reset' && !modal.message && (
                 <div className="flex gap-3 mt-4">
                   <button onClick={() => { setModal({ open: false, type: null }); }} className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300">취소</button>
                   <button onClick={() => { setModal({ open: false, type: null }); confirmReset(); }} className="px-4 py-2 rounded-lg bg-pink-400 text-white font-semibold hover:bg-pink-500">삭제</button>
+                </div>
+              )}
+              {modal.type === 'delete' && !modal.message && (
+                <div className="flex gap-3 mt-4">
+                  <button onClick={() => { setModal({ open: false, type: null }); }} className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300">취소</button>
+                  <button onClick={() => { setModal({ open: false, type: null }); confirmDelete(); }} className="px-4 py-2 rounded-lg bg-pink-400 text-white font-semibold hover:bg-pink-500">삭제</button>
                 </div>
               )}
               {modal.message && (
@@ -340,27 +357,38 @@ export default function Home() {
             placeholder="명함 검색..."
             className="px-3 py-2 rounded border border-gray-600 bg-gray-900 text-gray-100 w-full md:w-1/2"
           />
-          {showFavoriteOnly ? (
-            <button
-              type="button"
-              onClick={() => setShowFavoriteOnly(false)}
-              className="px-4 py-2 rounded font-semibold border transition ml-auto md:ml-2 bg-gray-200 text-gray-700 border-gray-300"
-              aria-pressed="false"
-              aria-label="전체보기"
-            >
-              전체보기
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setShowFavoriteOnly(true)}
-              className="px-4 py-2 rounded font-semibold border transition ml-auto md:ml-2 bg-yellow-300 text-yellow-900 border-yellow-400"
-              aria-pressed="false"
-              aria-label="즐겨찾기 보기"
-            >
-              ★ 즐겨찾기 보기
-            </button>
-          )}
+          <div className="flex gap-2 ml-auto md:ml-2">
+            {/* 검색어가 있을 때 전체보기 버튼 항상 노출 */}
+            {search && (
+              <button
+                type="button"
+                onClick={() => { setSearch(''); setShowFavoriteOnly(false); }}
+                className="px-4 py-2 rounded font-semibold border transition bg-gray-200 text-gray-700 border-gray-300"
+                aria-label="전체보기"
+              >
+                전체보기
+              </button>
+            )}
+            {showFavoriteOnly ? (
+              <button
+                type="button"
+                onClick={() => setShowFavoriteOnly(false)}
+                className="px-4 py-2 rounded font-semibold border transition bg-gray-200 text-gray-700 border-gray-300"
+                aria-label="전체보기"
+              >
+                전체보기
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowFavoriteOnly(true)}
+                className="px-4 py-2 rounded font-semibold border transition bg-yellow-300 text-yellow-900 border-yellow-400"
+                aria-label="즐겨찾기 보기"
+              >
+                ★ 즐겨찾기 보기
+              </button>
+            )}
+          </div>
         </div>
         {fetching ? (
           <div className="text-center py-8 text-gray-400">불러오는 중...</div>
@@ -417,7 +445,7 @@ export default function Home() {
                   <div className="mb-1 text-sm text-gray-300">🏠 {highlight(card.address, search)}</div>
                   <div className="mt-2 text-xs text-gray-400">등록일: {card.created_at ? new Date(card.created_at).toLocaleString() : ''}</div>
                   <div className="flex gap-2 mt-3">
-                    <button type="button" onClick={() => handleCopy(card)} className="px-2 py-1 bg-gray-200 rounded text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500" tabIndex={0} aria-label="복사">{copiedId === card.id ? '복사됨' : '복사'}</button>
+                    <button type="button" onClick={() => handleCopy(card)} className="px-2 py-1 bg-gray-200 rounded text-xs text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500" tabIndex={0} aria-label="복사">{copiedId === card.id ? '복사됨' : '복사'}</button>
                     <button type="button" onClick={() => handleEdit(card)} className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500" tabIndex={0} aria-label="수정">수정</button>
                     <button type="button" onClick={() => handleDelete(card.id)} className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500" tabIndex={0} aria-label="삭제">삭제</button>
                   </div>
